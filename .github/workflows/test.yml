@@ -1,0 +1,28 @@
+name: Test formulas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Tap this repository
+        run: |
+          mkdir -p "$(brew --repository)/Library/Taps/batuhan-bas"
+          ln -s "$GITHUB_WORKSPACE" "$(brew --repository)/Library/Taps/batuhan-bas/homebrew-tap"
+      - name: Audit
+        run: brew audit --strict --online --tap batuhan-bas/tap
+      - name: Install and test
+        run: |
+          for formula in Formula/*.rb; do
+            name=$(basename "$formula" .rb)
+            brew install --formula "batuhan-bas/tap/$name"
+            brew test "batuhan-bas/tap/$name"
+          done
